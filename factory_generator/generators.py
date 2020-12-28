@@ -1,4 +1,9 @@
-import factory
+from django import settings
+
+from factory.django import DjangoModelFactory
+
+BASE_DIR = settings.BASE_DIR
+FACTORIES_MODULE_NAME = 'factories'
 
 
 def generate_to_dict(factory_class, fields=None):
@@ -10,7 +15,7 @@ def generate_to_dict(factory_class, fields=None):
     factory_dict = factory.build(dict, FACTORY_CLASS=factory_class)
     for k in factory_dict.keys():
         try:
-            if DjangoModelFactory in factory_dict[k].__bases__: # Вложенная фабрика
+            if factory.DjangoModelFactory in factory_dict[k].__bases__: # Вложенная фабрика
                 factory_dict[k] = factory_as_dict(factory_dict[k])
         except AttributeError:
             # У объекта нет аттрибута '__bases__'
