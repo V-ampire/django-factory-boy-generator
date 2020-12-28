@@ -11,7 +11,6 @@ class TestDictGenerator(TestCase):
     
     def test_generate(self):
         result = generators.generate_to_dict(PersonFactory)
-        import pdb; pdb.set_trace()
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(isinstance(result['company'], dict))
         self.assertTrue(isinstance(result['company']['city'], dict))

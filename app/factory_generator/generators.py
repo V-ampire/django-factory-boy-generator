@@ -6,7 +6,7 @@ from factory.declarations import SubFactory
 import json
 
 
-def factory_as_dict(factory_class):
+def generate_to_dict(factory_class):
     """
     Converting a factory’s output to a dict, including SubFactories
     """
@@ -18,28 +18,18 @@ def factory_as_dict(factory_class):
     return factory.build(dict, FACTORY_CLASS=factory_class, **subs)
 
 
-def generate_to_dict(factory_class, quantity=1):
-    """
-    Generate dict based on factory
-    :param quantity: If quantity > 1 return list of dicts. 
-    """
-    if quantity > 1:
-        return [factory_as_dict(factory_class) for i in range(quantity)]
-    return factory_as_dict(factory_class)
-
-
-def generate_to_json(factory_class, quantity=1, **kwargs):
+def generate_to_json(factory_class, **kwargs):
     """
     Generate json based on factory class.
     """
     if not kwargs.get('cls'):
         kwargs['cls'] = DjangoJSONEncoder
-    return json.dumps(generate_to_dict(factory_class, quantity=quantity), **kwargs)
+    return json.dumps(generate_to_dict(factory_class), **kwargs)
 
 
 def generate_to_db(factory_class, quantity=1, **kwargs):
     """
     Generate sample data and fill database.
     """
-    return factory_class.create_batch(**kwargs)
+    return factory_class.create_batch(quantity, **kwargs)
 

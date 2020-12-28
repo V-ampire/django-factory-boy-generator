@@ -1,8 +1,7 @@
 from django.apps import apps
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import transaction, DEFAULT_DB_ALIAS
 
-from factory_generator import 
 from factory_generator.generators import generate_to_db
 
 
@@ -24,27 +23,22 @@ class Command(BaseCommand):
 
         parser.add_argument(
             '-e', '--exclude', action='append', default=[],
-            help='An app_label or app_label.ModelName to exclude '
-                 '(use multiple --exclude to exclude multiple apps/models).',
+            help='An app_label or app_label.FactoryName to exclude '
+                 '(use multiple --exclude to exclude multiple apps/factories).',
         )
 
         parser.add_argument(
-            '-q', '--quantity', action='append', default=[],
-            help='An app_label or app_label.ModelName to exclude '
-                 '(use multiple --exclude to exclude multiple apps/models).',
+            '-q', '--quantity', type=int, default=1, nargs='?',
+            help='Quantity of inctances of each models which will be generate to database',
         )
 
         parser.add_argument(
-            '-u', '--update', action='append', default=False,
-            help='An app_label or app_label.ModelName to exclude '
-                 '(use multiple --exclude to exclude multiple apps/models).',
+            '-u', '--update', action='store_true',
+            help='If specified, database will be rewrite. If not, new records will be added.',
         )
 
     def handle(self, *args, **options):
-        config = utils.load_file_config()
-        with transaction.atomic():
-            for app in config.apps:
-                app_config = apps.get_app_config(app)
-                for factory in utils.get_app_factories(app_config.path):
-                    factory.generate_to_db(config.quantity)
-                    message = f'Successfully created {config.quantity} o
+        database = options['database']
+        excludes = options['exclude']
+
+        import pdb; pdb.set_trace()

@@ -27,7 +27,7 @@ class PersonFactory(factory.django.DjangoModelFactory):
         model = Person
 
     name = f.first_name()
-    phone = f.phone_number()
+    phone = factory.Sequence(lambda n: '123-555-%04d' % n)
     company = factory.SubFactory(CompanyFactory)
     timestamp = factory.LazyFunction(datetime.now)
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)
