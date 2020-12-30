@@ -1,0 +1,1 @@
+FACTORIES_MODULE_NAME = 'factories'
