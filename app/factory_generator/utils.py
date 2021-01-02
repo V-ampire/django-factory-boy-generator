@@ -1,4 +1,3 @@
-
 from django.apps import apps as installed_apps
 from django.conf import settings
 from django.core.management.base import CommandError
@@ -11,7 +10,6 @@ import sys
 from typing import NamedTuple, List, Optional
 
 from . import FACTORIES_MODULE_NAME
-from .exceptions import IncorrectFactoryClassError
 
 BASE_DIR = settings.BASE_DIR
 
@@ -36,7 +34,7 @@ def load_file_config() -> Config:
     return Config(apps=apps, quantity=quantity)
 
 
-def get_module(file_path: str, module_name: str=FACTORIES_MODULE_NAME):
+def get_module(module_name: str, file_path: str):
     """
     Import and return module.
     :param module_name: Name of module.
@@ -49,46 +47,70 @@ def get_module(file_path: str, module_name: str=FACTORIES_MODULE_NAME):
     return module
 
 
+def is_super(cls, obj):
+    """
+    Return True if cls is superclass for obj, else return False.
+    """
+    try:
+        if cls in obj.__bases__:
+            return True
+        for supercls in obj.__bases__:
+            return is_super(cls, supercls)
+    except AttributeError:
+        return False
+
+
+def get_app_factories(app_path: str, factories_names: List[str]=[]) -> List[DjangoModelFactory]:
+    """
+    Return list of instances of DjangoModelFactory.
+    :param app: Filesystem path to the django application directory.
+    :param factories_names: List of names of concrete factories to get.
+
+    Raise AttributeError if factory module doesnt have specified factory.
+    """
+    factories = set()
+    module_name = FACTORIES_MODULE_NAME
+    file_path = os.path.join(app_path, f'{FACTORIES_MODULE_NAME}.py')
+    factory_module = get_module(module_name, file_path)
+    module_objects = factories_names if factories_names else dir(factory_module)
+    for obj_name in module_objects:
+        obj = getattr(factory_module, obj_name)
+        if is_super(DjangoModelFactory, obj):
+            factories.add(obj)
+    return list(factories)
+
+
 def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactory]:
     """
     Parse a list of "app_label.FactoryName" or "app_label" strings into actual
     objects and return a list of instances of DjangoModelFactory
     Raise a CommandError if some specified factory or apps don't exist.
     """
-    factories = []
+    factories = set()
     for label in labels:
         if '.' in label:
             try:
                 app_name, factory_name = label.split('.')
+                app_config = installed_apps.get_app_config(app_name)
             except ValueError:
                 raise CommandError('App or factory specified incorrectly. Use form app_label.FactoryName.')
-            try:
-                app_config = installed_apps.get_app_config(app_name)
+            
             except LookupError as e:
                 raise CommandError(f'Unknown factory: {label}')
-            factory_module = get_module(app_config.path)
+
             try:
-                getattr(factory_module, factory_name)
+                factories.update(get_app_factories(app_config.path, [factory_name]))
             except AttributeError:
                 raise CommandError(f'App {app_name} doesnt have {factory_name} factory')
+        
+        else:
+            try:
+                app_config = installed_apps.get_app_config(label)
+            except LookupError as e:
+                raise CommandError(f'Unknown app: {label}')
+            factories.update(get_app_factories(app_config.path))
+    return list(factories)
 
-
-
-
-
-
-
-def get_factory_from_app(app_label: str, factory_name: str) -> DjangoModelFactory:
-    """
-    Return the factory matching the given app_label and factory_name.
-
-    Raise LookupError if no application exists with this label, or no
-    factory exists with this name in the application.
-    """
-    app_config = installed_apps.get_app_config(app_label)
-    file_path = os.path.join(app_config.path, f'{FACTORIES_MODULE_NAME}.py')
-    factory_module = get_module(FACTORIES_MODULE_NAME, file_path)
-    factory_class = getattr(factory_module, factory_name)
 
 
 
@@ -97,21 +119,3 @@ def get_factory_from_app(app_label: str, factory_name: str) -> DjangoModelFactor
 
     
 
-def get_app_factories(app_path: str) -> List[DjangoModelFactory]:
-    """
-    Return list of instances of DjangoModelFactory.
-    :param app: Filesystem path to the django application directory.
-    """
-    factories = set()
-    module_name = FACTORIES_MODULE_NAME
-    file_path = os.path.join(app_path, f'{FACTORIES_MODULE_NAME}.py')
-    factory_module = get_module(module_name, file_path)
-    for obj_name in dir(factory_module):
-        obj = getattr(factory_module, obj_name)
-        try:
-            if DjangoModelFactory in obj.__bases__:
-                factories.append(obj)
-        except AttributeError:
-            # If object has no attribute '__bases__'
-            pass
-    return factories

@@ -31,3 +31,9 @@ class PersonFactory(factory.django.DjangoModelFactory):
     company = factory.SubFactory(CompanyFactory)
     timestamp = factory.LazyFunction(datetime.now)
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)
+
+
+class NotDjangoFactory(factory.Factory):
+    class Meta:
+        model = City
+    name = f.city()

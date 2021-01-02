@@ -7,13 +7,13 @@ from factory_generator import generators
 from sample_app.factories import CompanyFactory, PersonFactory
 
 
-class TestDictGenerator(TestCase):
+# class TestDictGenerator(TestCase):
     
-    def test_generate(self):
-        result = generators.generate_to_dict(PersonFactory)
-        self.assertTrue(isinstance(result, dict))
-        self.assertTrue(isinstance(result['company'], dict))
-        self.assertTrue(isinstance(result['company']['city'], dict))
+#     def test_generate(self):
+#         result = generators.generate_to_dict(PersonFactory)
+#         self.assertTrue(isinstance(result, dict))
+#         self.assertTrue(isinstance(result['company'], dict))
+#         self.assertTrue(isinstance(result['company']['city'], dict))
 
 
 # class TestJsonGenerator(TestCase):

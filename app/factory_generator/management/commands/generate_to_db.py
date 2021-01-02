@@ -3,6 +3,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction, DEFAULT_DB_ALIAS
 
 from factory_generator.generators import generate_to_db
+from factory_generator import utils
 
 
 class Command(BaseCommand):
@@ -37,8 +38,11 @@ class Command(BaseCommand):
             help='If specified, database will be rewrite. If not, new records will be added.',
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *labels, **options):
         database = options['database']
         excludes = options['exclude']
+        quantity = options['exclude']
+        update = options['update']
 
-        import pdb; pdb.set_trace()
+        exclude_factories = utils.parse_apps_and_factories_labels(excludes)
+        
