@@ -36,3 +36,8 @@ Quantity of objects every factory which will be generated.
 `--update, -u`
 
 If specified, database will be rewrite. If not, new records will be added.
+
+
+`-f --file`
+
+Path to configuration *.ini* file related of project base directory.

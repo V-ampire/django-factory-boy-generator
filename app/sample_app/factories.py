@@ -3,7 +3,7 @@ from sample_app.models import Company, Person, City
 import factory
 from faker import Faker
 
-from datetime import datetime
+from django.utils import timezone
 
 f = Faker()
 
@@ -11,7 +11,7 @@ f = Faker()
 class CityFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = City
-    name = f.city()
+    title = f.city()
 
 
 class CompanyFactory(factory.django.DjangoModelFactory):
@@ -29,7 +29,7 @@ class PersonFactory(factory.django.DjangoModelFactory):
     name = f.first_name()
     phone = factory.Sequence(lambda n: '123-555-%04d' % n)
     company = factory.SubFactory(CompanyFactory)
-    timestamp = factory.LazyFunction(datetime.now)
+    timestamp = factory.LazyFunction(timezone.now)
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)
 
 

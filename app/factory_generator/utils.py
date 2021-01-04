@@ -1,37 +1,59 @@
 from django.apps import apps as installed_apps
+from django.apps import AppConfig
 from django.conf import settings
 from django.core.management.base import CommandError
 
 import configparser
 from factory.django import DjangoModelFactory
 import importlib
+import logging
 import os
 import sys
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Dict
 
 from . import FACTORIES_MODULE_NAME
+
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = settings.BASE_DIR
 
 
 class Config(NamedTuple):
-    apps: List[str]
+    labels: List[str]
     quantity: int
+    exclude: List[str]
+    update: bool
 
 
-def get_config_path() -> str:
-    return os.path.join(BASE_DIR, 'factory_generator.ini')
+def get_full_file_path(file_path: str) -> str:
+    return os.path.join(BASE_DIR, file_path)
 
 
-def load_file_config() -> Config:
+def load_file_config(config_path: str) -> Config:
     """
-    Return Config object
+    Return Config object.
+    :param config_path: Path to configuration .ini file.
+
+    Raise FileNotFoundError in config file not found.
     """
     config = configparser.ConfigParser()
-    config.read(get_config_path())
-    apps = config['factory_generator']['apps'].split(sep=',')
-    quantity = int(config['factory_generator']['quantity'])
-    return Config(apps=apps, quantity=quantity)
+    with open(config_path, 'r') as f:
+        config.read(config_path)
+
+    try:
+        labels = config['factory_generator']['labels'].split(sep=',')
+    except KeyError:
+        labels = []
+
+    try:
+        exclude = config['factory_generator']['exclude'].split(sep=',')
+    except KeyError:
+        exclude = []
+
+    quantity = int(config['factory_generator'].get('quantity', 1))
+    update = bool(config['factory_generator'].getboolean('update'))
+    return Config(labels=labels, quantity=quantity, exclude=exclude, update=update)
 
 
 def get_module(module_name: str, file_path: str):
@@ -47,7 +69,7 @@ def get_module(module_name: str, file_path: str):
     return module
 
 
-def is_super(cls, obj):
+def is_super(cls, obj) -> bool:
     """
     Return True if cls is superclass for obj, else return False.
     """
@@ -60,7 +82,7 @@ def is_super(cls, obj):
         return False
 
 
-def get_app_factories(app_path: str, factories_names: List[str]=[]) -> List[DjangoModelFactory]:
+def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> List[DjangoModelFactory]:
     """
     Return list of instances of DjangoModelFactory.
     :param app: Filesystem path to the django application directory.
@@ -69,15 +91,38 @@ def get_app_factories(app_path: str, factories_names: List[str]=[]) -> List[Djan
     Raise AttributeError if factory module doesnt have specified factory.
     """
     factories = set()
-    module_name = FACTORIES_MODULE_NAME
-    file_path = os.path.join(app_path, f'{FACTORIES_MODULE_NAME}.py')
-    factory_module = get_module(module_name, file_path)
+    module_name = f'{app_config.name}.{FACTORIES_MODULE_NAME}'
+    file_path = os.path.join(app_config.path, f'{FACTORIES_MODULE_NAME}.py')
+    try:
+        factory_module = get_module(module_name, file_path)
+    except FileNotFoundError:
+        logger.debug(f'Factory module {module_name} not found.')
+        return list(factories)
     module_objects = factories_names if factories_names else dir(factory_module)
     for obj_name in module_objects:
         obj = getattr(factory_module, obj_name)
         if is_super(DjangoModelFactory, obj):
             factories.add(obj)
     return list(factories)
+
+
+def get_full_factory_name(obj: DjangoModelFactory) -> str:
+    """
+    Use this function to find the same factories imported multiple times.
+    """
+    return f'{obj.__module__}.{__name__}'
+
+
+def exclude_factories(factories: List[DjangoModelFactory], 
+                        excludes: List[DjangoModelFactory]) -> List[DjangoModelFactory]:
+    """
+    Exclude factories by full factory name.
+    """
+    excludes_names = [get_full_factory_name(f) for f in excludes]
+
+    return list(filter(
+        lambda x: get_full_factory_name(x) not in excludes_names, factories)
+    )
 
 
 def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactory]:
@@ -99,7 +144,7 @@ def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactor
                 raise CommandError(f'Unknown factory: {label}')
 
             try:
-                factories.update(get_app_factories(app_config.path, [factory_name]))
+                factories.update(get_app_factories(app_config, [factory_name]))
             except AttributeError:
                 raise CommandError(f'App {app_name} doesnt have {factory_name} factory')
         
@@ -108,14 +153,18 @@ def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactor
                 app_config = installed_apps.get_app_config(label)
             except LookupError as e:
                 raise CommandError(f'Unknown app: {label}')
-            factories.update(get_app_factories(app_config.path))
+            factories.update(get_app_factories(app_config))
     return list(factories)
 
 
-
-
-
-
-
+def delete_by_factory(factory_class: DjangoModelFactory) -> Dict:
+    """
+    Delete all instances of model of DjangoModelFactory.
+    :param factory_class: Class inherits from DjangoModelFactory.
+    """
+    if not is_super(DjangoModelFactory, factory_class):
+        raise TypeError('Factory class must be subclass of factory.django.DjangoModelFactory')
     
+    model_class = factory_class._meta.get_model_class()
+    return model_class.objects.all().delete()
 

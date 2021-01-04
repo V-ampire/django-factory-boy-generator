@@ -18,13 +18,22 @@ def generate_to_dict(factory_class):
     return factory.build(dict, FACTORY_CLASS=factory_class, **subs)
 
 
-def generate_to_json(factory_class, **kwargs):
+def generate_to_json(factory_class, quantity=1, **kwargs):
     """
     Generate json based on factory class.
+    If quantity > 1 return list of dicts, else return dict.
     """
     if not kwargs.get('cls'):
         kwargs['cls'] = DjangoJSONEncoder
-    return json.dumps(generate_to_dict(factory_class), **kwargs)
+
+    if quantity > 1:
+        json_data = []
+        for i in range(quantity):
+            json_data.append(generate_to_dict(factory_class))
+    else:
+        json_data generate_to_dict(factory_class)
+
+    return json.dumps(json_data, **kwargs)
 
 
 def generate_to_db(factory_class, quantity=1, **kwargs):
