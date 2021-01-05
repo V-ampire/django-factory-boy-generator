@@ -1,15 +1,21 @@
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 
 from factory_generator.management.base import BaseGenerateCommand
-from factory_generator.management.commands.generate_to_db import GenerateToDbCommand
+from factory_generator.management.commands.generate_to_db import Command \
+    as GenerateToDbCommand
+from factory_generator.management.commands.generate_to_json import Command \
+    as GenerateToJsonCommand
 from factory_generator.utils import Config, get_full_file_path
+from factory_generator.generators import generate_to_json
 
-from sample_app.factories import CityFactory
+from sample_app.factories import CityFactory, PersonFactory
 from sample_app.models import City
 
 from faker import Faker
+import json
 from io import StringIO
 from unittest.mock import patch, call, Mock
 
@@ -40,6 +46,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     @patch('factory_generator.management.base.utils.load_file_config')
     def test_load_options_from_file(self, mock_load_config, mock_generate):
+        mock_generate.return_value = ''
         expected_exclude = []
         expected_update = True
         expected_quantity = 3
@@ -94,6 +101,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.utils.get_app_factories')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_without_labels(self, mock_generate, mock_factories, mock_apps):
+        mock_generate.return_value = ''
         app_config = Mock()
         generate_factories = [Mock(), Mock()]
         mock_apps.return_value = [app_config]
@@ -107,6 +115,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_labels(self, mock_generate, mock_factories):
+        mock_generate.return_value = ''
         expected_labels = ('sample_app', 'sample_app.City')
         generate_factories = [Mock(), Mock()]
         mock_factories.return_value = generate_factories
@@ -121,6 +130,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_excludes(self, mock_generate, mock_factories, mock_excludes):
+        mock_generate.return_value = ''
         labels = ('sample_app', 'sample_app.City')
         exclude_factories_list = [Mock(), Mock()]
         generate_factories = [Mock(), Mock()]
@@ -137,6 +147,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_quantity(self, mock_generate, mock_factories):
+        mock_generate.return_value = ''
         labels = ('sample_app', 'sample_app.City')
         expected_quantity = fake.pyint()
         call_command(self.cmd, *labels, quantity=expected_quantity)
@@ -147,6 +158,7 @@ class TestBaseGenerateCmd(TestCase):
     @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_update(self, mock_generate, mock_factories):
+        mock_generate.return_value = ''
         labels = ('sample_app', 'sample_app.City')
         expected_update = True
         call_command(self.cmd, *labels, update=expected_update)
@@ -197,3 +209,44 @@ class TestGenerateToDbCmd(TestCase):
             self.cmd.generate(factories, update=True)
         self.assertTrue(City.objects.filter(pk=expected_city.pk).exists())
 
+
+class TestGenerateToJsonCmd(TestCase):
+
+    def setUp(self):
+        self.cmd = GenerateToJsonCommand()
+
+    @patch('factory_generator.management.commands.generate_to_json.generate_to_json')
+    def test_generate(self, mock_generate):
+        factories = [CityFactory]
+        factories_data = [generate_to_json(f) for f in factories]
+        mock_generate.return_value = factories_data
+        tested_data = json.loads(self.cmd.generate(factories))
+
+        for data in tested_data:
+            self.assertEqual(tested_data[0]['model'], CityFactory._meta.model._meta.label_lower)
+            self.assertEqual(tested_data[0]['fields'],factories_data[0])
+
+    @patch('factory_generator.management.commands.generate_to_json.generate_to_json')
+    def test_generate_with_quantity(self, mock_generate):
+        factories = [CityFactory]
+        expected_quantity = 3
+        factories_data = [generate_to_json(f, quantity=expected_quantity) for f in factories]
+        tested_data = json.loads(self.cmd.generate(factories, quantity=expected_quantity))
+
+        for tested, expected in zip(tested_data, factories_data):
+            self.assertEqual(tested['model'], CityFactory._meta.model._meta.label_lower)
+            self.assertEqual(tested_data['fields'], expected)
+
+    @patch('factory_generator.management.commands.generate_to_json.json.dumps')
+    def test_default_encoder(self, mock_dumps):
+        expected_encoder = DjangoJSONEncoder
+        factories = [CityFactory]
+        self.cmd.generate(factories)
+        self.assertEqual(mock_dumps.call_args.kwargs['cls'], expected_encoder)
+
+    @patch('factory_generator.management.commands.generate_to_json.json.dumps')
+    def test_custom_encoder(self, mock_dumps):
+        expected_encoder = Mock()
+        factories = [CityFactory]
+        self.cmd.generate(factories, cls=expected_encoder)
+        self.assertEqual(mock_dumps.call_args.kwargs['cls'], expected_encoder)

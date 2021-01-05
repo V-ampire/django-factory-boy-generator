@@ -1,4 +1,3 @@
-from django.core.serializers.json import DjangoJSONEncoder
 from django.test import TestCase
 from django.utils import timezone
 
@@ -23,15 +22,18 @@ class TestDictGenerator(TestCase):
 class TestJsonGenerator(TestCase):
 
     def test_generate(self):
-        expected_json = json.dumps(generators.generate_to_dict(CityFactory), 
-                                    cls=DjangoJSONEncoder)
+        expected_json = [generators.generate_to_dict(CityFactory)]
         result = generators.generate_to_json(CityFactory)
         self.assertEqual(result, expected_json)
 
-    @patch('factory_generator.generators.json.dumps')
-    def test_default_encoder(self, mock_dumps):
-        generators.generate_to_json(PersonFactory)
-        self.assertEqual(mock_dumps.call_args.kwargs['cls'], DjangoJSONEncoder)
+    def test_generate_with_quantity(self):
+        expected_quantity = 3
+        expected_data = [
+            generators.generate_to_dict(CityFactory)
+            for i in range(expected_quantity)
+        ]
+        result = generators.generate_to_json(CityFactory, quantity=expected_quantity)
+        self.assertEqual(result, expected_data)
 
 
 class TestDbGenerator(TestCase):

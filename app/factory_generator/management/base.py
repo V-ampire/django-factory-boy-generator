@@ -1,6 +1,9 @@
 from django.apps import apps as installed_apps
 from django.core.management.base import BaseCommand, CommandError
 
+from factory.django import DjangoModelFactory
+from typing import List
+
 from factory_generator import utils
 
 
@@ -9,7 +12,8 @@ class BaseGenerateCommand(BaseCommand):
     Base class for generating commands.
     It defines getting options and parameters for generating.
     """
-    def generate(self, generate_factories, update=False, quantity=1):
+    def generate(self, generate_factories: List[DjangoModelFactory], 
+                    update=False, quantity=1, **kwargs):
         raise NotImplementedError('You should define method to generate.')
 
     def add_arguments(self, parser):
@@ -71,4 +75,4 @@ class BaseGenerateCommand(BaseCommand):
             exclude_factories_list = utils.parse_apps_and_factories_labels(excludes)
             generate_factories = utils.exclude_factories(generate_factories, exclude_factories_list)
 
-        self.generate(generate_factories, update=update, quantity=quantity)
+        return self.generate(generate_factories, update=update, quantity=quantity)

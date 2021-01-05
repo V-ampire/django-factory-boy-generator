@@ -1,9 +1,5 @@
-from django.core.serializers.json import DjangoJSONEncoder
-
 import factory
 from factory.declarations import SubFactory
-
-import json
 
 
 def generate_to_dict(factory_class):
@@ -20,20 +16,13 @@ def generate_to_dict(factory_class):
 
 def generate_to_json(factory_class, quantity=1, **kwargs):
     """
-    Generate json based on factory class.
-    If quantity > 1 return list of dicts, else return dict.
+    Generate json data based on factory class.
+    Return list of dictionaries with generated data.
     """
-    if not kwargs.get('cls'):
-        kwargs['cls'] = DjangoJSONEncoder
-
-    if quantity > 1:
-        json_data = []
-        for i in range(quantity):
-            json_data.append(generate_to_dict(factory_class))
-    else:
-        json_data generate_to_dict(factory_class)
-
-    return json.dumps(json_data, **kwargs)
+    json_data = []
+    for i in range(quantity):
+        json_data.append(generate_to_dict(factory_class))
+    return json_data
 
 
 def generate_to_db(factory_class, quantity=1, **kwargs):
