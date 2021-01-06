@@ -6,7 +6,7 @@ from shutil import rmtree
 from setuptools import find_packages, setup, Command
 
 # Package meta-data.
-NAME = 'django-factory-generator'
+NAME = 'django-factory-boy-generator'
 DESCRIPTION = 'This package provides django app to generate data for django apps using factories.'
 URL = 'https://github.com/V-ampire/django-factory-generator'
 EMAIL = 'webjob010@gmail.com'
@@ -120,7 +120,15 @@ setup(
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     # $ setup.py publish support.
-    keywords=['django', 'factory', 'generator', 'generate_db', 'generate_dict'],
+    keywords=[
+        'django', 
+        'factory', 
+        'generator', 
+        'generate_db', 
+        'generate_model_dict',
+        'generate_model_json',  
+        'factory-boy'
+    ],
     cmdclass={
         'upload': UploadCommand,
     },
