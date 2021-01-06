@@ -17,8 +17,8 @@
 <a name="usage"></a>
 ## Usage
 
-### 1. Create in your django app(s) module `factories.py`.
-### 2. Define in this module factories according to [factory-boy docs](https://factoryboy.readthedocs.io/en/stable/orms.html).
+1. Create in your django app(s) module `factories.py`.
+2. Define in this module factories according to [factory-boy docs](https://factoryboy.readthedocs.io/en/stable/orms.html).
 All factories for a Django Model should use the DjangoModelFactory base class.
 
 Example:
@@ -43,7 +43,7 @@ class PersonFactory(factory.django.DjangoModelFactory):
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)
 ```
 
-3. **Use django-admin commands:**
+### Use django-admin commands:**
 
 - Generate records in database:
 
