@@ -4,6 +4,7 @@
 - [Requirements](#requirements)
 - [Usage](#usage)
 - [Configuration from file](#config)
+- [Advanced usege](#advanced)
 
 
 <a name="requirements"></a>
@@ -43,7 +44,7 @@ class PersonFactory(factory.django.DjangoModelFactory):
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)
 ```
 
-### Use django-admin commands:**
+### Use django-admin commands:
 
 - Generate records in database:
 
@@ -79,7 +80,7 @@ If specified, database will be rewrite. If not, new records will be added.
 Path to configuration *.ini* file related of project base directory. See [configuration from file](#config)
 
 
-4. **Use generators as functions.**
+### Use generators as functions.
 
 **django-factory-boy-generator** provides 3 generators:
 
@@ -101,14 +102,45 @@ Generate sample data and use it to fill database.
 You also can use generators, for example, in unit tests:
 ```
 from django.test import TestCase
-from factory_generator import generate_to_db
+from factory_generator import generate_to_db, generate_to_db
 from sample_app.factories import PersonFactory
 
 
-class TestSomeActionsWithDb(TestCase):
+class TestSomeActions(TestCase):
 
     def setUp(self):
         self.persons = generate_to_db(PersonFactory, quantity=5)
+        self.persons_data = generate_to_json(PersonFactory, quantity=5)
 
     ...  # your tests
+```
+
+
+<a name="config"></a>
+## Configuration from file
+
+Instead of to pass options every time into command line, you can create `.ini` file with options, which will be used every time when you run commands:
+```
+[factory_generator]
+labels=sample_app, another_app.SomeFactory
+exclude=another_app.DontGenerateFactory
+quantity=3
+update=on
+```
+
+
+<a name="advanced"></a>
+## Advanced usage
+
+By default, `generate_to_json` command uses DjangoJSONEncoder. If you want to use another json encoder you can create your custon command extends `factory_generator.management.commands.generate_to_json.Command` and specify encoder pass keyword argument `cls` like this:
+```
+# your_app.management.commands.create_json
+
+from factory_generator.management.commands.generate_to_json import Command as JsonCommand
+from your_app.serializers import CustomJsonEncoder
+
+class Command(JsonCommand):
+
+    def generate(self, generate_factories, quantity=1, **kwargs)
+        return super().generate(generate_factories, quantity=1, cls=CustomJsonEncoder)
 ```
