@@ -1,10 +1,18 @@
 # App to generate data for django apps using [factory-boy](https://github.com/FactoryBoy/factory_boy) factories.
 
+
 ## Table of contents
 - [Requirements](#requirements)
+- [Install](#install)
 - [Usage](#usage)
 - [Configuration from file](#config)
 - [Advanced usege](#advanced)
+
+
+<a name="install"></a>
+## Install
+
+`pip install django-factory-boy-generator`
 
 
 <a name="requirements"></a>
