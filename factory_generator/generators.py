@@ -1,8 +1,9 @@
 import factory
 from factory.declarations import SubFactory
+from typing import Dict, List
 
 
-def generate_to_dict(factory_class):
+def generate_to_dict(factory_class) -> Dict:
     """
     Converting a factory’s output to a dict, including SubFactories
     """
@@ -14,7 +15,7 @@ def generate_to_dict(factory_class):
     return factory.build(dict, FACTORY_CLASS=factory_class, **subs)
 
 
-def generate_to_json(factory_class, quantity=1, **kwargs):
+def generate_to_json(factory_class, quantity=1, **kwargs) -> List[Dict]:
     """
     Generate json data based on factory class.
     Return list of dictionaries with generated data.
@@ -30,4 +31,3 @@ def generate_to_db(factory_class, quantity=1, **kwargs):
     Generate sample data and fill database.
     """
     return factory_class.create_batch(quantity, **kwargs)
-

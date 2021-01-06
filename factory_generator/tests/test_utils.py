@@ -2,14 +2,12 @@ from django.apps import apps as installed_apps
 from django.test import TestCase
 from django.core.management.base import CommandError
 
-from factory_generator import utils, FACTORIES_MODULE_NAME
+from factory_generator import utils
 
-from sample_app import factories as sample_factories
-from sample_app import models
+from factory_generator.tests.testapp import factories as sample_factories
+from factory_generator.tests.testapp import models
 
 from faker import Faker
-import os
-from unittest.mock import Mock, patch
 
 
 fake = Faker()
@@ -63,7 +61,7 @@ class TestIsSuper(TestCase):
 class TestGetAppFactories(TestCase):
 
     def setUp(self):
-        self.app_config = installed_apps.get_app_config('sample_app')
+        self.app_config = installed_apps.get_app_config('testapp')
         self.module = sample_factories
     
     def test_get_all_factories(self):
@@ -81,7 +79,6 @@ class TestGetAppFactories(TestCase):
             expected_factories_names,
             tested_factories_names,
         )
-
 
     def get_factories_by_names(self):
         expected_factories = [
@@ -102,7 +99,7 @@ class TestGetAppFactories(TestCase):
 
     def test_get_only_django_factories(self):
         tested_factories = utils.get_app_factories(
-            self.app_config, ['NotDjangoFactory',]
+            self.app_config, ['NotDjangoFactory']
         )
         self.assertEqual(tested_factories, [])
 
@@ -110,11 +107,11 @@ class TestGetAppFactories(TestCase):
 class TestParseLabels(TestCase):
 
     def setUp(self):
-        self.app_config = installed_apps.get_app_config('sample_app')
+        self.app_config = installed_apps.get_app_config('testapp')
         self.module = sample_factories
 
     def test_with_factory_name(self):
-        labels = ['sample_app.CityFactory']
+        labels = ['testapp.CityFactory']
         expected_factories = [
             self.module.CityFactory,
         ] 
@@ -129,7 +126,7 @@ class TestParseLabels(TestCase):
         )
 
     def test_with_app_name(self):
-        labels = ['sample_app']
+        labels = ['testapp']
         expected_factories = [
             self.module.CityFactory,
             self.module.CompanyFactory,
@@ -147,7 +144,7 @@ class TestParseLabels(TestCase):
 
     def test_with_incorrect_label(self):
         expected_msg = 'App or factory specified incorrectly. Use form app_label.FactoryName.'
-        labels = ['sample_app.CityFactory.name']
+        labels = ['testapp.CityFactory.name']
         with self.assertRaises(CommandError) as e:
             execinfo = e
             utils.parse_apps_and_factories_labels(labels)
@@ -156,7 +153,7 @@ class TestParseLabels(TestCase):
     def test_with_app_not_exists(self):
         invalid_app_name = fake.word()
         expected_msg = f'Unknown app: {invalid_app_name}'
-        labels = ['sample_app.CityFactory', invalid_app_name]
+        labels = ['testapp.CityFactory', invalid_app_name]
         with self.assertRaises(CommandError) as e:
             execinfo = e
             utils.parse_apps_and_factories_labels(labels)
@@ -164,8 +161,8 @@ class TestParseLabels(TestCase):
     
     def test_with_factory_not_exists(self):
         invalid_factory_name = fake.word()
-        expected_msg = f'App sample_app doesnt have {invalid_factory_name} factory'
-        labels = [f'sample_app.{invalid_factory_name}']
+        expected_msg = f'App testapp doesnt have {invalid_factory_name} factory'
+        labels = [f'testapp.{invalid_factory_name}']
         with self.assertRaises(CommandError) as e:
             execinfo = e
             utils.parse_apps_and_factories_labels(labels)
@@ -179,7 +176,7 @@ class TestDeleteByFactory(TestCase):
         self.model_class = models.City
 
     def test_success_delete(self):
-        model_instance = self.factory_class.create()
+        self.factory_class.create()
         utils.delete_by_factory(self.factory_class)
         self.assertFalse(self.model_class.objects.all())
     
@@ -187,5 +184,5 @@ class TestDeleteByFactory(TestCase):
         self.factory_class.create()
         self.factory_class.create()
         self.factory_class.create()
-        result = utils.delete_by_factory(self.factory_class)
+        utils.delete_by_factory(self.factory_class)
         self.assertTrue(self.factory_class._meta.model)

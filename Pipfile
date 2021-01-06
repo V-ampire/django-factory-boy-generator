@@ -6,6 +6,9 @@ verify_ssl = true
 [dev-packages]
 django = "*"
 ipython = "*"
+pytest-django = "*"
+flake8 = "*"
+pytest-pythonpath = "*"
 
 [packages]
 factory-boy = "*"

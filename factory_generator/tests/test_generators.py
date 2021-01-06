@@ -1,13 +1,10 @@
 from django.test import TestCase
-from django.utils import timezone
 
-from datetime import datetime
-import json
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from factory_generator import generators
 
-from sample_app.factories import CompanyFactory, PersonFactory, CityFactory
+from factory_generator.tests.testapp.factories import CompanyFactory, PersonFactory, CityFactory
 
 
 class TestDictGenerator(TestCase):
@@ -46,10 +43,8 @@ class TestDbGenerator(TestCase):
         mock_create.assert_called_with(expected_quantity)
 
     @patch.object(CompanyFactory, 'create_batch')
-    def test_call_create_batch(self, mock_create):
+    def test_call_create_batch_with_quantity(self, mock_create):
         expected_quantity = 3
         generators.generate_to_db(CompanyFactory, quantity=expected_quantity)
         mock_create.assert_called_once()
         mock_create.assert_called_with(expected_quantity)
-
-

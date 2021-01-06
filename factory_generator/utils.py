@@ -9,7 +9,7 @@ import importlib
 import logging
 import os
 import sys
-from typing import NamedTuple, List, Optional, Dict
+from typing import NamedTuple, List, Dict
 
 from . import FACTORIES_MODULE_NAME
 
@@ -39,7 +39,7 @@ def load_file_config(config_path: str) -> Config:
     """
     config = configparser.ConfigParser()
     with open(config_path, 'r') as f:
-        config.read(config_path)
+        config.read(f)
 
     try:
         labels = config['factory_generator']['labels'].split(sep=',')
@@ -69,15 +69,15 @@ def get_module(module_name: str, file_path: str):
     return module
 
 
-def is_super(cls, obj) -> bool:
+def is_super(supercls, obj) -> bool:
     """
-    Return True if cls is superclass for obj, else return False.
+    Return True if supercls is superclass for obj, else return False.
     """
     try:
-        if cls in obj.__bases__:
+        if supercls in obj.__bases__:
             return True
-        for supercls in obj.__bases__:
-            return is_super(cls, supercls)
+        for cls in obj.__bases__:
+            return is_super(supercls, cls)
     except AttributeError:
         return False
 
@@ -113,7 +113,7 @@ def get_full_factory_name(obj: DjangoModelFactory) -> str:
     return f'{obj.__module__}.{__name__}'
 
 
-def exclude_factories(factories: List[DjangoModelFactory], 
+def exclude_factories(factories: List[DjangoModelFactory],
                         excludes: List[DjangoModelFactory]) -> List[DjangoModelFactory]:
     """
     Exclude factories by full factory name.
@@ -140,7 +140,7 @@ def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactor
             except ValueError:
                 raise CommandError('App or factory specified incorrectly. Use form app_label.FactoryName.')
             
-            except LookupError as e:
+            except LookupError:
                 raise CommandError(f'Unknown factory: {label}')
 
             try:
@@ -151,7 +151,7 @@ def parse_apps_and_factories_labels(labels: List[str]) -> List[DjangoModelFactor
         else:
             try:
                 app_config = installed_apps.get_app_config(label)
-            except LookupError as e:
+            except LookupError:
                 raise CommandError(f'Unknown app: {label}')
             factories.update(get_app_factories(app_config))
     return list(factories)
@@ -167,4 +167,3 @@ def delete_by_factory(factory_class: DjangoModelFactory) -> Dict:
     
     model_class = factory_class._meta.get_model_class()
     return model_class.objects.all().delete()
-

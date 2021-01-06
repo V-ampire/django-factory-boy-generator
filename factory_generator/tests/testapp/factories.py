@@ -1,4 +1,4 @@
-from sample_app.models import Company, Person, City
+from factory_generator.tests.testapp.models import Company, Person, City
 
 import factory
 from faker import Faker

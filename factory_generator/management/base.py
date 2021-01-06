@@ -19,7 +19,7 @@ class BaseGenerateCommand(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             'args', metavar='app_label[.FactoryName]', nargs='*',
-            help='Restricts dumped data to the specified app_label or app_label.ModelName.',
+            help='Restricts generated data to the specified app_label or app_label.FactoryName.',
         )
 
         parser.add_argument(
@@ -30,7 +30,7 @@ class BaseGenerateCommand(BaseCommand):
 
         parser.add_argument(
             '-q', '--quantity', type=int, default=1, nargs='?',
-            help='Quantity of inctances of each models which will be generate to database',
+            help='Quantity of inctances of each factory which will be generate.',
         )
 
         parser.add_argument(
@@ -44,9 +44,6 @@ class BaseGenerateCommand(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        """
-        Если переданы аргументы то запускаем с ними, если нет то из файла.
-        """
         if options['file']:
             config_path = utils.get_full_file_path(options['file'])
             try:

@@ -27,4 +27,4 @@ class Command(BaseGenerateCommand):
                 generate_to_db(factory_class, quantity=quantity)
                 message = f'Successfully created {quantity} objects of model {factory_class._meta.model}'
                 self.stdout.write(self.style.SUCCESS(message))
-        
+                

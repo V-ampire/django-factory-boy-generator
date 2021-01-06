@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 107
+ignore = F403, E252, W293, E127, W291
+exclude = migrations, testapp

@@ -1,7 +1,6 @@
 from django.core.serializers.json import DjangoJSONEncoder
 
 from factory_generator.generators import generate_to_json
-from factory_generator import utils
 from factory_generator.management.base import BaseGenerateCommand
 
 import json
@@ -12,9 +11,8 @@ class Command(BaseGenerateCommand):
 
     def generate(self, generate_factories, update=False, quantity=1, **kwargs):
         """
-        Return json string of list of dictionaries, 
-        where dictionary is dict representation of factory class.
-        For json serizlizing uses DjangoJSONEncoder as default, to specify encoder pass kwarg cls.
+        Return json string contains models label and fiels as dict representation of factory class.
+        For json serializing uses DjangoJSONEncoder as default, to specify encoder pass kwarg cls.
         """
         if not kwargs.get('cls'):
             kwargs['cls'] = DjangoJSONEncoder
@@ -31,4 +29,3 @@ class Command(BaseGenerateCommand):
                     }
                 )
         return json.dumps(result, **kwargs)
-
