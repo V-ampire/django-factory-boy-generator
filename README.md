@@ -3,16 +3,24 @@
 
 ## Table of contents
 - [Requirements](#requirements)
-- [Install](#install)
+- [Installation](#install)
 - [Usage](#usage)
 - [Configuration from file](#config)
 - [Advanced usege](#advanced)
 
 
 <a name="install"></a>
-## Install
+## Installation
 
 `pip install django-factory-boy-generator`
+
+Add `factory_generator` to your `INSTALLED_APPS` setting.
+```
+INSTALLED_APPS = [
+    ...
+    'factory_generator',
+]
+```
 
 
 <a name="requirements"></a>
