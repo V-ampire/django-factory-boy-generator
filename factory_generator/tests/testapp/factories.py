@@ -28,6 +28,8 @@ class PersonFactory(factory.django.DjangoModelFactory):
 
     name = f.first_name()
     phone = factory.Sequence(lambda n: '123-555-%04d' % n)
+    photo = factory.django.ImageField(filename=f.file_name(extension='jpg'))
+    passport_scan = factory.django.FileField(filename=f.file_name(extension='pdf'))
     company = factory.SubFactory(CompanyFactory)
     timestamp = factory.LazyFunction(timezone.now)
     email = factory.LazyAttribute(lambda obj: '%s@example.com' % obj.name)

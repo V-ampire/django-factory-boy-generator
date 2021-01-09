@@ -13,6 +13,8 @@ class Company(models.Model):
 
 class Person(models.Model):
     name = models.CharField(max_length=64)
+    photo = models.ImageField()
+    passport_scan = models.FileField()
     phone = models.CharField(max_length=12)
     company = models.ForeignKey('Company', on_delete=models.CASCADE, related_name='persons')
     timestamp = models.DateTimeField()

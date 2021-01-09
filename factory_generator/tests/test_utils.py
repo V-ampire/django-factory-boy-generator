@@ -1,16 +1,54 @@
 from django.apps import apps as installed_apps
 from django.test import TestCase
 from django.core.management.base import CommandError
+from django.conf import settings
 
 from factory_generator import utils
 
 from factory_generator.tests.testapp import factories as sample_factories
 from factory_generator.tests.testapp import models
 
+import configparser
 from faker import Faker
+import os
 
 
 fake = Faker()
+
+BASE_DIR = settings.BASE_DIR
+
+
+class TestLoadFileConfig(TestCase):
+    
+    def setUp(self):
+        self.config_path = os.path.join(BASE_DIR, 'factory_generator.ini')
+        self.expected_labels = [fake.word() for i in range(3)]
+        self.expected_excludes = [fake.word()]
+        self.expected_quantity = fake.pyint()
+        self.expected_update = fake.boolean()
+        config = configparser.ConfigParser()
+        config['factory_generator'] = {
+            'labels': ','.join(self.expected_labels),
+            'exclude': self.expected_excludes[0],
+            'quantity': self.expected_quantity,
+            'update': self.expected_update
+        }
+        with open(self.config_path, 'w') as configfile:
+            config.write(configfile)
+
+    def tearDown(self):
+        os.remove(self.config_path)
+
+    def test_load_config(self):
+        config = utils.load_file_config(self.config_path)
+        self.assertEqual(config.labels, self.expected_labels)
+        self.assertEqual(config.exclude, self.expected_excludes)
+        self.assertEqual(config.quantity, self.expected_quantity)
+        self.assertEqual(config.update, self.expected_update)
+
+    def test_raise_file_not_found(self):
+        with self.assertRaises(FileNotFoundError):
+            utils.load_file_config(fake.file_path())
 
 
 class TestGetModule(TestCase):

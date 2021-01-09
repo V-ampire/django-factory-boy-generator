@@ -1,4 +1,4 @@
-from django.core.serializers.json import DjangoJSONEncoder
+from factory_generator.encoders import DjangoFileJsonEncoder
 
 from factory_generator.generators import generate_to_json
 from factory_generator.management.base import BaseGenerateCommand
@@ -15,7 +15,7 @@ class Command(BaseGenerateCommand):
         For json serializing uses DjangoJSONEncoder as default, to specify encoder pass kwarg cls.
         """
         if not kwargs.get('cls'):
-            kwargs['cls'] = DjangoJSONEncoder
+            kwargs['cls'] = DjangoFileJsonEncoder
 
         result = []
         for factory_class in generate_factories:

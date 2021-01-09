@@ -1,6 +1,6 @@
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.core.serializers.json import DjangoJSONEncoder
+from factory_generator.encoders import DjangoFileJsonEncoder
 from django.test import TestCase
 
 from factory_generator.management.base import BaseGenerateCommand
@@ -236,7 +236,7 @@ class TestGenerateToJsonCmd(TestCase):
 
     @patch('factory_generator.management.commands.generate_to_json.json.dumps')
     def test_default_encoder(self, mock_dumps):
-        expected_encoder = DjangoJSONEncoder
+        expected_encoder = DjangoFileJsonEncoder
         factories = [CityFactory]
         self.cmd.generate(factories)
         tested_call_kwargs = mock_dumps.call_args[1]

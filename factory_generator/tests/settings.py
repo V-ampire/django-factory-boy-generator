@@ -12,7 +12,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'factory_generator.tests.testapp.apps.TestappConfig'
+    'factory_generator.tests.testapp.apps.TestappConfig',
+    'factory_generator.apps.FactoryGeneratorConfig'
 ]
 
 

@@ -38,8 +38,8 @@ def load_file_config(config_path: str) -> Config:
     Raise FileNotFoundError in config file not found.
     """
     config = configparser.ConfigParser()
-    with open(config_path, 'r') as f:
-        config.read(f)
+    with open(config_path, 'r') as fp:
+        config.read_file(fp)
 
     try:
         labels = config['factory_generator']['labels'].split(sep=',')

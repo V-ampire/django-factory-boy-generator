@@ -9,6 +9,7 @@ ipython = "*"
 pytest-django = "*"
 flake8 = "*"
 pytest-pythonpath = "*"
+pillow = "*"
 
 [packages]
 factory-boy = "*"
