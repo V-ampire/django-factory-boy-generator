@@ -148,7 +148,7 @@ update=on
 <a name="advanced"></a>
 ## Advanced usage
 
-By default, `generate_to_json` command uses DjangoJSONEncoder. If you want to use another json encoder you can create your custon command extends `factory_generator.management.commands.generate_to_json.Command` and specify encoder pass keyword argument `cls` like this:
+By default, `generate_to_json` command uses custom `DjangoFileJsonEncoder` which extends `DjangoJSONEncoder` and serizlize file-objects to string of path to file. If you want to use another json encoder you can create your custon command extends `factory_generator.management.commands.generate_to_json.Command` and specify encoder pass keyword argument `cls` like this:
 ```
 # your_app.management.commands.create_json
 
