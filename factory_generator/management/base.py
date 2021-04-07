@@ -52,6 +52,8 @@ class BaseGenerateCommand(BaseCommand):
                 quantity = config.quantity
                 update = config.update
                 labels = config.labels
+                mode = config.mode
+                factories_module_name = config.factories_module_name
             except FileNotFoundError:
                 raise CommandError(f'Configuration file {config_path} not found.')
         else:
@@ -62,6 +64,8 @@ class BaseGenerateCommand(BaseCommand):
             
         generate_factories = []
 
+        # TODO Check mode
+        # TODO Get factories depending on mode
         if not labels:
             for app_config in installed_apps.get_app_configs():
                 generate_factories.extend(utils.get_app_factories(app_config))

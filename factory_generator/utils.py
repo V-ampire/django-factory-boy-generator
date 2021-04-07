@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.management.base import CommandError
 
 import configparser
+from enum import Enum
 from factory.django import DjangoModelFactory
 import importlib
 import logging
@@ -19,11 +20,33 @@ logger = logging.getLogger(__name__)
 BASE_DIR = settings.BASE_DIR
 
 
+class Mode(Enum):
+    MODULE = 'module'
+    APPS = 'apps'
+
+
 class Config(NamedTuple):
+    """
+    Configuration object.
+    :attr labels: Restricts generated data to the specified app_label or app_label.FactoryName. 
+                  Use only with APP mode.
+    :attr include: Restricts generated data to the specified FactoryName.
+                   Use only with MODULE mode.
+    :attr quantity: Quantity of inctances of each factory which will be generate.
+    :attr exclude: An app_label or app_label.FactoryName with APP mode or FactoryName with Module mode to exclude.
+    :attr update: If specified, database will be rewrite. If not, new records will be added.
+    :attr mode: Specifies how factory classes will be lookuped.
+                If mode is MODULE (default), factory classes lookups in module factories_module_name in project directory.
+                If mode is APP, factory classes lookups in each django apps in modules named factories_module_name.
+    :attr factories_module_name: Name of module(s) with factory classes.
+    """
     labels: List[str]
+    include: List[str]
     quantity: int
     exclude: List[str]
     update: bool
+    mode: str
+    factories_module_name: str
 
 
 def get_full_file_path(file_path: str) -> str:
@@ -53,7 +76,10 @@ def load_file_config(config_path: str) -> Config:
 
     quantity = int(config['factory_generator'].get('quantity', 1))
     update = bool(config['factory_generator'].getboolean('update'))
-    return Config(labels=labels, quantity=quantity, exclude=exclude, update=update)
+    mode = config['factory_generator'].get('mode', Mode.MODULE.value)
+    factories_module_name = config['factory_generator'].get('factories_module_name', FACTORIES_MODULE_NAME)
+    return Config(labels=labels, quantity=quantity, exclude=exclude, update=update, mode=mode, 
+                    factories_module_name=factories_module_name)
 
 
 def get_module(module_name: str, file_path: str):
@@ -91,6 +117,7 @@ def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> L
     Raise AttributeError if factory module doesnt have specified factory.
     """
     factories = set()
+    # FIXME FACTORIES_MODULE_NAME define from config
     module_name = f'{app_config.name}.{FACTORIES_MODULE_NAME}'
     file_path = os.path.join(app_config.path, f'{FACTORIES_MODULE_NAME}.py')
     try:
@@ -167,3 +194,22 @@ def delete_by_factory(factory_class: DjangoModelFactory) -> Dict:
     
     model_class = factory_class._meta.get_model_class()
     return model_class.objects.all().delete()
+
+
+def get_module_factories(factories_names: List[str]=[], 
+                            factories_module_name: str=FACTORIES_MODULE_NAME) -> List[DjangoModelFactory]:
+    """
+    Return list of instances of DjangoModelFactory.
+    :param factories_names: List of names of concrete factories to get.
+
+    Raise AttributeError if factory module doesnt have specified factory.
+    """
+    factories = set()
+    file_path = os.path.join(BASE_DIR, f'{factories_module_name}.py')
+    factory_module = get_module(factories_module_name, file_path)
+    module_objects = factories_names if factories_names else dir(factory_module)
+    for obj_name in module_objects:
+        obj = getattr(factory_module, obj_name)
+        if is_super(DjangoModelFactory, obj):
+            factories.add(obj)
+    return list(factories)
