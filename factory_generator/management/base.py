@@ -1,10 +1,9 @@
-from django.apps import apps as installed_apps
 from django.core.management.base import BaseCommand, CommandError
 
 from factory.django import DjangoModelFactory
 from typing import List
 
-from factory_generator import utils
+from factory_generator import utils, FACTORIES_MODULE_NAME
 
 
 class BaseGenerateCommand(BaseCommand):
@@ -43,37 +42,30 @@ class BaseGenerateCommand(BaseCommand):
             help='Path to configuration .ini file related of project base directory.',
         )
 
+    def get_generate_factories(self, config: utils.Config) -> List[DjangoModelFactory]:
+        if config.mode == utils.Mode.APPS.value:
+            return utils.
+
     def handle(self, *args, **options):
         if options['file']:
             config_path = utils.get_full_file_path(options['file'])
             try:
                 config = utils.load_file_config(config_path)
-                excludes = config.exclude
-                quantity = config.quantity
-                update = config.update
-                labels = config.labels
-                mode = config.mode
-                factories_module_name = config.factories_module_name
             except FileNotFoundError:
                 raise CommandError(f'Configuration file {config_path} not found.')
         else:
-            excludes = options['exclude']
-            quantity = options['quantity']
-            update = options['update']
-            labels = args
+            config = utils.Config(
+                labels=args,
+                excludes=options['exclude']
+                quantity=options['quantity']
+                update=options['update']
+            )
             
         generate_factories = []
-
-        # TODO Check mode
-        # TODO Get factories depending on mode
-        if not labels:
-            for app_config in installed_apps.get_app_configs():
-                generate_factories.extend(utils.get_app_factories(app_config))
-        else:
-            generate_factories.extend(utils.parse_apps_and_factories_labels(labels))
         
-        if excludes:
-            exclude_factories_list = utils.parse_apps_and_factories_labels(excludes)
-            generate_factories = utils.exclude_factories(generate_factories, exclude_factories_list)
+        if not labels:
+            generate_factories.extend(utils.get_all_factories())
+        else:
+            generate_factories = utils.parse_factories_from_labels(config.labels, config.exclude)
 
-        return self.generate(generate_factories, update=update, quantity=quantity)
+        return self.generate(generate_factories, update=config.update, quantity=config.quantity)
