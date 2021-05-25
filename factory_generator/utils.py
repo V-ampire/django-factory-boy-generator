@@ -50,12 +50,12 @@ def load_file_config(config_path: str) -> Config:
         config.read_file(fp)
 
     try:
-        labels = config['factory_generator']['labels'].split(sep=',') # FIXME use get?
+        labels = config['factory_generator']['labels'].split(sep=',')
     except KeyError:
         labels = []
 
     try:
-        exclude = config['factory_generator']['exclude'].split(sep=',') # FIXME use get?
+        exclude = config['factory_generator']['exclude'].split(sep=',')
     except KeyError:
         exclude = []
 

@@ -137,6 +137,19 @@ class TestGetAppFactories(TestCase):
         )
         self.assertEqual(tested_factories, [])
 
+    def test_get_all_factories(self):
+        expected_factories = set()
+        for app_config in installed_apps.get_app_configs():
+            expected_factories.update(utils.get_app_factories(app_config))
+        expected_factories = list(expected_factories)
+        tested_factories = utils.get_all_factories()
+        expected_factories.sort(key=str)
+        tested_factories.sort(key=str)
+        self.assertEqual(
+            [str(f) for f in expected_factories],
+            [str(f) for f in tested_factories],
+        )
+
 
 class TestParseLabels(TestCase):
 

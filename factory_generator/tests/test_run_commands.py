@@ -38,21 +38,23 @@ class TestRunGenerateToJson(TestCase):
         self.assertEqual(result_json, expected_json + '\n')
 
 
-# class TestRunGenerateToDb(TestCase):
+class TestRunGenerateToDb(TestCase):
 
-#     def call_command(self, *args, **kwargs):
-#         out = StringIO()
-#         call_command(
-#             "generate_to_db",
-#             *args,
-#             stdout=out,
-#             stderr=StringIO(),
-#             **kwargs,
-#         )
-#         return out.getvalue()
-
-#     def test_run_without_options(self):
-#         self.call_command('testapp.PersonFactory')
-#         self.assertTrue(Person.objects.all().exists())
+    def call_command(self, *args, **kwargs):
+        out = StringIO()
+        call_command(
+            "generate_to_db",
+            *args,
+            stdout=out,
+            stderr=StringIO(),
+            **kwargs,
+        )
+        return out.getvalue()
+    
+    @patch('factory_generator.management.commands.generate_to_db.generate_to_db')
+    def test_run_without_options(self, mock_generate):
+        self.call_command('testapp.PersonFactory')
+        tested_factory_class = mock_generate.call_args[0][0]
+        self.assertEqual(str(tested_factory_class), str(PersonFactory))
         
     

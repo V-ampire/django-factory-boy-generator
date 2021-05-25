@@ -10,6 +10,8 @@ pytest-django = "*"
 flake8 = "*"
 pytest-pythonpath = "*"
 pillow = "*"
+coverage = "*"
+pytest-cov = "*"
 
 [packages]
 factory-boy = "*"
