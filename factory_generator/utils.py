@@ -4,7 +4,6 @@ from django.conf import settings
 from django.core.management.base import CommandError
 
 import configparser
-from enum import Enum
 from factory.django import DjangoModelFactory
 import importlib
 import logging
