@@ -12,7 +12,7 @@ class BaseGenerateCommand(BaseCommand):
     It defines getting options and parameters for generating.
     """
     def generate(self, generate_factories: List[DjangoModelFactory], 
-                    update=False, quantity=1, **kwargs):
+                    update: bool=False, quantity: int=1, **kwargs):
         raise NotImplementedError('You should define method to generate.')
 
     def add_arguments(self, parser):
@@ -42,10 +42,6 @@ class BaseGenerateCommand(BaseCommand):
             help='Path to configuration .ini file related of project base directory.',
         )
 
-    def get_generate_factories(self, config: utils.Config) -> List[DjangoModelFactory]:
-        if config.mode == utils.Mode.APPS.value:
-            return utils.
-
     def handle(self, *args, **options):
         if options['file']:
             config_path = utils.get_full_file_path(options['file'])
@@ -56,15 +52,13 @@ class BaseGenerateCommand(BaseCommand):
         else:
             config = utils.Config(
                 labels=args,
-                excludes=options['exclude']
-                quantity=options['quantity']
-                update=options['update']
+                exclude=options['exclude'],
+                quantity=options['quantity'],
+                update=options['update'],
             )
-            
-        generate_factories = []
         
-        if not labels:
-            generate_factories.extend(utils.get_all_factories())
+        if not config.labels:
+            generate_factories = utils.get_all_factories()
         else:
             generate_factories = utils.parse_factories_from_labels(config.labels, config.exclude)
 

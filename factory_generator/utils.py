@@ -24,24 +24,14 @@ class Config(NamedTuple):
     """
     Configuration object.
     :attr labels: Restricts generated data to the specified app_label or app_label.FactoryName. 
-                  Use only with APP mode.
-    :attr include: Restricts generated data to the specified FactoryName.
-                   Use only with MODULE mode.
     :attr quantity: Quantity of inctances of each factory which will be generate.
-    :attr exclude: An app_label or app_label.FactoryName with APP mode or FactoryName with Module mode to exclude.
+    :attr exclude: An app_label or app_label.FactoryName to exclude.
     :attr update: If specified, database will be rewrite. If not, new records will be added.
-    :attr mode: Specifies how factory classes will be lookuped.
-                If mode is MODULE (default), factory classes lookups in module factories_module_name in project directory.
-                If mode is APP, factory classes lookups in each django apps in modules named factories_module_name.
-    :attr factories_module_name: Name of module(s) with factory classes.
     """
     labels: List[str]
-    include: List[str]
     quantity: int
     exclude: List[str]
     update: bool
-    mode: str
-    factories_module_name: str
 
 
 def get_full_file_path(file_path: str) -> str:
@@ -60,12 +50,12 @@ def load_file_config(config_path: str) -> Config:
         config.read_file(fp)
 
     try:
-        labels = config['factory_generator']['labels'].split(sep=',')
+        labels = config['factory_generator']['labels'].split(sep=',') # FIXME use get?
     except KeyError:
         labels = []
 
     try:
-        exclude = config['factory_generator']['exclude'].split(sep=',')
+        exclude = config['factory_generator']['exclude'].split(sep=',') # FIXME use get?
     except KeyError:
         exclude = []
 
@@ -102,8 +92,8 @@ def is_super(supercls, obj) -> bool:
 
 def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> List[DjangoModelFactory]:
     """
-    Return list of instances of DjangoModelFactory.
-    :param app: Filesystem path to the django application directory.
+    Return list of instances of DjangoModelFactory in app.
+    :param app_config: Django application config object.
     :param factories_names: List of names of concrete factories to get.
 
     Raise AttributeError if factory module doesnt have specified factory.
@@ -126,7 +116,7 @@ def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> L
 
 def get_all_factories() -> List[DjangoModelFactory]:
     """
-    Return factory classes from aech app.
+    Return factory classes from each app.
     """
     factories = set()
     for app_config in installed_apps.get_app_configs():
@@ -134,7 +124,7 @@ def get_all_factories() -> List[DjangoModelFactory]:
     return list(factories)
 
 
-def parse_factories_from_labels(labels: List[str], exclude: List[str]) -> List[DjangoModelFactory]:
+def parse_factories_from_labels(labels: List[str], exclude: List[str]=[]) -> List[DjangoModelFactory]:
     """
     Parse a labels of "app_label.FactoryName" or "app_label" and exclude it if it's nessesary.
     :param labels: List of labels of "app_label.FactoryName" or "app_label".
@@ -143,7 +133,6 @@ def parse_factories_from_labels(labels: List[str], exclude: List[str]) -> List[D
     Returns a list of subclasses DjangoModelFactory
     """
     factories = set()
-    factories_labels = exclude_labels(labels, exclude) if exclude else labels
 
     for label in labels:
         if label not in exclude:

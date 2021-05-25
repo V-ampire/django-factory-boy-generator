@@ -72,7 +72,7 @@ class TestBaseGenerateCmd(TestCase):
         self.assertEqual(expected_message, tested_message)
 
     @patch('factory_generator.management.base.BaseGenerateCommand.handle')
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     def test_with_labels_option(self, mock_parse, mock_handle):
         mock_handle.return_value = ''
         mock_parse.return_value = []
@@ -84,7 +84,7 @@ class TestBaseGenerateCmd(TestCase):
         mock_handle.assert_called_once()
 
     @patch('factory_generator.management.base.BaseGenerateCommand.handle')
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     def test_with_exclude_option(self, mock_parse, mock_handle):
         mock_handle.return_value = ''
         mock_parse.return_value = []
@@ -95,14 +95,11 @@ class TestBaseGenerateCmd(TestCase):
         self.assertEqual(tested_call_kwargs['exclude'], expected_excludes)
         mock_handle.assert_called_once()
 
-    @patch('factory_generator.management.base.installed_apps.get_app_configs')
-    @patch('factory_generator.management.base.utils.get_app_factories')
+    @patch('factory_generator.management.base.utils.get_all_factories')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
-    def test_call_generate_without_labels(self, mock_generate, mock_factories, mock_apps):
+    def test_call_generate_without_labels(self, mock_generate, mock_factories):
         mock_generate.return_value = ''
-        app_config = Mock()
         generate_factories = [Mock(), Mock()]
-        mock_apps.return_value = [app_config]
         mock_factories.return_value = generate_factories
         call_command(self.cmd)
 
@@ -110,39 +107,35 @@ class TestBaseGenerateCmd(TestCase):
         self.assertEqual(tested_call_args[0], generate_factories)
         mock_generate.assert_called_once()
 
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
-    def test_call_generate_with_labels(self, mock_generate, mock_factories):
+    def test_call_generate_with_labels(self, mock_generate, mock_parse):
         mock_generate.return_value = ''
         expected_labels = ('testapp', 'testapp.City')
         generate_factories = [Mock(), Mock()]
-        mock_factories.return_value = generate_factories
+        mock_parse.return_value = generate_factories
         call_command(self.cmd, *expected_labels)
 
         tested_call_args = mock_generate.call_args[0]
         self.assertEqual(tested_call_args[0], generate_factories)
         mock_generate.assert_called_once()
-        mock_factories.assert_called_with(expected_labels)
+        mock_parse.assert_called_with(expected_labels, [])
 
-    @patch('factory_generator.management.base.utils.exclude_factories')
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
-    def test_call_generate_with_excludes(self, mock_generate, mock_factories, mock_excludes):
+    def test_call_generate_with_excludes(self, mock_generate, mock_parse):
         mock_generate.return_value = ''
-        labels = ('testapp', 'testapp.City')
-        exclude_factories_list = [Mock(), Mock()]
-        generate_factories = [Mock(), Mock()]
-        mock_factories.side_effect = [generate_factories, exclude_factories_list]
-        expected_factories = [Mock()]
-        mock_excludes.return_value = expected_factories
-        call_command(self.cmd, *labels, exclude=labels)
+        labels = ('testapp', )
+        exclude = ('testapp.City', )
+        expected_factories = [Mock(), Mock()]
+        mock_parse.return_value = expected_factories
+        call_command(self.cmd, *labels, exclude=exclude)
 
-        testes_args = mock_generate.call_args[0]
+        self.assertEqual(mock_generate.call_args[0], (expected_factories, ))
+        mock_parse.assert_called_with(labels, exclude)
         mock_generate.assert_called_once()
-        self.assertEqual(testes_args[0], expected_factories)
-        mock_excludes.assert_called_with(generate_factories, exclude_factories_list)
 
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_quantity(self, mock_generate, mock_factories):
         mock_generate.return_value = ''
@@ -152,7 +145,7 @@ class TestBaseGenerateCmd(TestCase):
         tested_call_kwargs = mock_generate.call_args[1]
         self.assertEqual(tested_call_kwargs['quantity'], expected_quantity)
 
-    @patch('factory_generator.management.base.utils.parse_apps_and_factories_labels')
+    @patch('factory_generator.management.base.utils.parse_factories_from_labels')
     @patch('factory_generator.management.base.BaseGenerateCommand.generate')
     def test_call_generate_with_update(self, mock_generate, mock_factories):
         mock_generate.return_value = ''

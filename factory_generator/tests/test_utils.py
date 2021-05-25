@@ -102,20 +102,18 @@ class TestGetAppFactories(TestCase):
         self.app_config = installed_apps.get_app_config('testapp')
         self.module = sample_factories
     
-    def test_get_all_factories(self):
+    def test_get_app_factories(self):
         expected_factories = [
             self.module.CityFactory,
             self.module.CompanyFactory,
             self.module.PersonFactory,
         ]
         tested_factories = utils.get_app_factories(self.app_config)
-        expected_factories_names = [utils.get_full_factory_name(f) for f in expected_factories]
-        expected_factories_names.sort()
-        tested_factories_names = [utils.get_full_factory_name(f) for f in tested_factories]
-        tested_factories_names.sort()
+        expected_factories.sort(key=str)
+        tested_factories.sort(key=str)
         self.assertEqual(
-            expected_factories_names,
-            tested_factories_names,
+            [str(f) for f in expected_factories],
+            [str(f) for f in tested_factories],
         )
 
     def get_factories_by_names(self):
@@ -126,13 +124,11 @@ class TestGetAppFactories(TestCase):
         tested_factories = utils.get_app_factories(
             self.app_config.path, ['CityFactory', 'CompanyFactory']
         )
-        expected_factories_names = [utils.get_full_factory_name(f) for f in expected_factories]
-        expected_factories_names.sort()
-        tested_factories_names = [utils.get_full_factory_name(f) for f in tested_factories]
-        tested_factories_names.sort()
+        expected_factories.sort(key=str)
+        tested_factories.sort(key=str)
         self.assertEqual(
-            expected_factories_names,
-            tested_factories_names,
+            [str(f) for f in expected_factories],
+            [str(f) for f in tested_factories],
         )
 
     def test_get_only_django_factories(self):
@@ -153,14 +149,12 @@ class TestParseLabels(TestCase):
         expected_factories = [
             self.module.CityFactory,
         ] 
-        tested_factories = utils.parse_apps_and_factories_labels(labels)
-        expected_factories_names = [utils.get_full_factory_name(f) for f in expected_factories]
-        expected_factories_names.sort()
-        tested_factories_names = [utils.get_full_factory_name(f) for f in tested_factories]
-        tested_factories_names.sort()
+        tested_factories = utils.parse_factories_from_labels(labels)
+        expected_factories.sort(key=str)
+        tested_factories.sort(key=str)
         self.assertEqual(
-            expected_factories_names,
-            tested_factories_names,
+            [str(f) for f in expected_factories],
+            [str(f) for f in tested_factories],
         )
 
     def test_with_app_name(self):
@@ -170,14 +164,12 @@ class TestParseLabels(TestCase):
             self.module.CompanyFactory,
             self.module.PersonFactory,
         ] 
-        tested_factories = utils.parse_apps_and_factories_labels(labels)
-        expected_factories_names = [utils.get_full_factory_name(f) for f in expected_factories]
-        expected_factories_names.sort()
-        tested_factories_names = [utils.get_full_factory_name(f) for f in tested_factories]
-        tested_factories_names.sort()
+        tested_factories = utils.parse_factories_from_labels(labels)
+        expected_factories.sort(key=str)
+        tested_factories.sort(key=str)
         self.assertEqual(
-            expected_factories_names,
-            tested_factories_names,
+            [str(f) for f in expected_factories],
+            [str(f) for f in tested_factories],
         )
 
     def test_with_incorrect_label(self):
@@ -185,7 +177,7 @@ class TestParseLabels(TestCase):
         labels = ['testapp.CityFactory.name']
         with self.assertRaises(CommandError) as e:
             execinfo = e
-            utils.parse_apps_and_factories_labels(labels)
+            utils.parse_factories_from_labels(labels)
         self.assertTrue(expected_msg in execinfo.exception.args)
 
     def test_with_app_not_exists(self):
@@ -194,7 +186,7 @@ class TestParseLabels(TestCase):
         labels = ['testapp.CityFactory', invalid_app_name]
         with self.assertRaises(CommandError) as e:
             execinfo = e
-            utils.parse_apps_and_factories_labels(labels)
+            utils.parse_factories_from_labels(labels)
         self.assertTrue(expected_msg in execinfo.exception.args)
     
     def test_with_factory_not_exists(self):
@@ -203,7 +195,7 @@ class TestParseLabels(TestCase):
         labels = [f'testapp.{invalid_factory_name}']
         with self.assertRaises(CommandError) as e:
             execinfo = e
-            utils.parse_apps_and_factories_labels(labels)
+            utils.parse_factories_from_labels(labels)
         self.assertTrue(expected_msg in execinfo.exception.args)
 
 
