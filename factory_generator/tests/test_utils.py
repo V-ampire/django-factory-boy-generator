@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.core.management.base import CommandError
 from django.conf import settings
 
-from factory_generator import utils
+from factory_generator import utils, FACTORIES_MODULE_NAME
 
 from factory_generator.tests.testapp import factories as sample_factories
 from factory_generator.tests.testapp import models
@@ -11,6 +11,7 @@ from factory_generator.tests.testapp import models
 import configparser
 from faker import Faker
 import os
+from unittest.mock import patch
 
 
 fake = Faker()
@@ -149,6 +150,16 @@ class TestGetAppFactories(TestCase):
             [str(f) for f in expected_factories],
             [str(f) for f in tested_factories],
         )
+
+    def test_get_nonexistent_factory(self):
+        module_name = f'{self.app_config.name}.{FACTORIES_MODULE_NAME}'
+        expected_msg = f'Factory NonexistentFactory not found in module {module_name}.'
+        with self.assertRaises(utils.FactoryNotFoundError) as e:
+            execinfo = e
+            utils.get_app_factories(
+                self.app_config, ['NonexistentFactory',]
+            )
+        self.assertTrue(expected_msg in execinfo.exception.args)
 
 
 class TestParseLabels(TestCase):

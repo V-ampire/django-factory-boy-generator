@@ -33,6 +33,10 @@ class Config(NamedTuple):
     update: bool
 
 
+class FactoryNotFoundError(Exception):
+    """Error occurs when factory not found in app factory module.""" 
+
+
 def get_full_file_path(file_path: str) -> str:
     return os.path.join(BASE_DIR, file_path)
 
@@ -95,7 +99,7 @@ def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> L
     :param app_config: Django application config object.
     :param factories_names: List of names of concrete factories to get.
 
-    Raise AttributeError if factory module doesnt have specified factory.
+    Raise FactoryNotFoundError if factory module doesnt have specified factory.
     """
     factories = set()
     module_name = f'{app_config.name}.{FACTORIES_MODULE_NAME}'
@@ -107,7 +111,10 @@ def get_app_factories(app_config: AppConfig, factories_names: List[str]=[]) -> L
         return list(factories)
     module_objects = factories_names if factories_names else dir(factory_module)
     for obj_name in module_objects:
-        obj = getattr(factory_module, obj_name)
+        try:
+            obj = getattr(factory_module, obj_name)
+        except AttributeError:
+            raise FactoryNotFoundError(f'Factory {obj_name} not found in module {module_name}.')
         if is_super(DjangoModelFactory, obj):
             factories.add(obj)
     return list(factories)
@@ -149,7 +156,7 @@ def parse_factories_from_labels(labels: List[str], exclude: List[str]=[]) -> Lis
 
                     try:
                         factories.update(get_app_factories(app_config, [factory_name]))
-                    except AttributeError:
+                    except FactoryNotFoundError:
                         raise CommandError(f'App {app_name} doesnt have {factory_name} factory')
             
             else:
